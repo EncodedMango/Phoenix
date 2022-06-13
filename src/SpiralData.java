@@ -1,35 +1,61 @@
 import java.util.Random;
 
+class Linspace {
+    private double current;
+    private final double end;
+    private final double step;
+    Utils.Vector n;
+    public Linspace(double start, double end, int samples) {
+        this.current = start;
+        this.end = end;
+        this.step = (end - start) / samples;
+
+        n = new Utils.Vector(samples);
+        for (int i = 0; i < samples; i ++) {
+            if (hasNext()) {n.v[i] = getNextFloat();}
+        }
+    }
+
+    public boolean hasNext() {
+        return current < (end + step / 2); //MAY stop floating point error
+    }
+    public double getNextFloat() {
+        current += step;
+        return current;
+    }
+}
+
 public class SpiralData {
-    Matrix X;
-    Vector y;
+    Utils.Matrix X;
+    Utils.Vector y;
 
     public SpiralData(int samples, int classes) {
-        X = new Matrix(2, samples * classes);
-        y = new Vector(samples * classes);
+        X = new Utils.Matrix(0, 2);
+        y = new Utils.Vector(samples * classes);
 
         for (int class_number = 0; class_number < classes; class_number ++) {
-            Range ix = new Range(samples * class_number, samples * (class_number + 1));
-            Vector r = new Linspace(0.0, 1, samples).n;
-            Vector t = new Linspace(class_number * 4, (class_number + 1) * 4, samples).n.addVector(getGaussian(samples).mulDouble(0.2));
-            Matrix c = Concat(r.mulVector(t.mulDouble((2.5)).sin()), r.mulVector(t.mulDouble((2.5)).cos()));
-            if (samples >= 0) System.arraycopy(c.m, 0, X.m, ix.min, samples);
+            Utils.Range ix = new Utils.Range(samples * class_number, samples * (class_number + 1));
+            Utils.Vector r = new Linspace(0.0, 1, samples).n;
+            Utils.Vector t = new Linspace(class_number * 4, (class_number + 1) * 4, samples).n.addVector(getGaussian(samples).mulDouble(0.2));
+            Utils.Matrix c = Concat(r.mulVector(t.mulDouble((2.5)).sin()), r.mulVector(t.mulDouble((2.5)).cos()));
+
             for (int i = 0; i < samples; i ++) {
+                X.insertRow(c.m[i]);
                 y.v[i + ix.min] = class_number;
             }
         }
     }
 
-    public Matrix Concat(Vector a, Vector b) {
-        Matrix n = new Matrix(2, a.v.length);
+    public Utils.Matrix Concat(Utils.Vector a, Utils.Vector b) {
+        Utils.Matrix n = new Utils.Matrix(a.v.length, 2);
         for (int i = 0; i < a.v.length; i ++) {
             n.m[i] = new double[]{a.v[i], b.v[i]};
         }
         return n;
     }
 
-    public Vector getGaussian(int samples) {
-        Vector v = new Vector(samples);
+    public Utils.Vector getGaussian(int samples) {
+        Utils.Vector v = new Utils.Vector(samples);
         for (int i = 0; i < samples; i ++) {
             double r = new Random().nextGaussian();
             v.v[i] = r;
